@@ -32,7 +32,7 @@ class RobotRoutine(object):
 
         rospy.loginfo('Fetching parameters from dynamic_reconfigure')
         self.recfg_sever = Server(ChargingThresholdsConfig, self.dynamic_reconfigure_cb)
-        
+
 
         self.battery_count = 0
         # home many ~10Hz updates to wait for between forced charge counts
@@ -47,7 +47,7 @@ class RobotRoutine(object):
         # lazy/silly sleep to check battery received if present
         rospy.sleep(0.5)
 
-        
+
 
         # create routine structure
         self.routine = task_routine.DailyRoutine(daily_start, daily_end)
@@ -66,8 +66,8 @@ class RobotRoutine(object):
 
 
 
-        # how big a gap in the scheduler should trigger a return to charger 
-        self.charge_window = rospy.Duration(60 * 10)
+        # how big a gap in the scheduler should trigger a return to charger
+        self.charge_window = rospy.Duration(60 * 60 * 24) # TODO: Disable charging when idle
 
         # and how long to charge for once there, it won't automatically leave if there's nothing to do
         self.idle_charge_duration = rospy.Duration(60)
@@ -76,7 +76,7 @@ class RobotRoutine(object):
 
         # how many 5 second idle counts to wait for before deciding we're idle
         # a count of 12 is one minute
-        
+
 
 
         self.idle_thres = int(idle_duration.to_sec() / 5)
@@ -101,18 +101,18 @@ class RobotRoutine(object):
 
         if task.start_node_id != '':
             rospy.logwarn('Rejecting task to do %s at %s as only location-free tasks are allowed at night')
-            return 
+            return
 
         self.night_tasks.append(task)
 
     def is_before_day_start(self,time):
-        if task_routine.time_less_than(self.daily_start,self.daily_end):  
+        if task_routine.time_less_than(self.daily_start,self.daily_end):
             return task_routine.time_less_than(time, self.daily_start)
         else:
             return task_routine.time_less_than(time, self.daily_start) and task_routine.time_less_than(self.daily_end, time)
 
     def is_after_day_end(self,time):
-        if task_routine.time_less_than(self.daily_start,self.daily_end):  
+        if task_routine.time_less_than(self.daily_start,self.daily_end):
             return task_routine.time_less_than(self.daily_end, time)
         else:
             return task_routine.time_less_than(self.daily_end, time) and task_routine.time_less_than(time, self.daily_start)
@@ -154,22 +154,22 @@ class RobotRoutine(object):
 
 
     def battery_ok(self):
-        """ Reports false if battery is below force_charge_threshold or if it is above it but within force_charge_addition of the threshold and charging """ 
+        """ Reports false if battery is below force_charge_threshold or if it is above it but within force_charge_addition of the threshold and charging """
 
         if self.battery_state is not None:
 
             # if batter is below threshold, it's never ok
-            if self.battery_state.lifePercent < self.threshold:                
+            if self.battery_state.lifePercent < self.threshold:
                 return False
             # else if we're charging we should allow some amount of charging to happen
             # before everything is ok again
             elif self.battery_state.charging or self.battery_state.powerSupplyPresent:
-                threshold = min(self.threshold + self.addition, 99)                
+                threshold = min(self.threshold + self.addition, 99)
                 return self.battery_state.lifePercent > threshold
             else:
                 return True
 
-        else: 
+        else:
             rospy.logwarn('No battery received when checking')
             return True
 
@@ -178,16 +178,16 @@ class RobotRoutine(object):
 
 
         if not self.battery_ok():
-            
+
             # if not ok and not triggered yet
             if self.battery_count == 0:
                 rospy.logwarn('Battery below force charge threshold: %s ' % (self.battery_state.lifePercent))
                 self.clear_then_charge(self.force_charge_duration)
-            
+
             # update count
             self.battery_count += 1
-            
-            if self.battery_count >= self.battery_count_thres and not (self.battery_state.charging or self.battery_state.powerSupplyPresent):                
+
+            if self.battery_count >= self.battery_count_thres and not (self.battery_state.charging or self.battery_state.powerSupplyPresent):
                 rospy.logwarn('Still not charging, trying again')
                 self.battery_count = 0
         else:
@@ -200,12 +200,12 @@ class RobotRoutine(object):
         if len(self.night_tasks) > 0 and not self.sent_night_tasks and self.battery_state is not None and self.battery_state.charging and not self.is_during_day(now):
             rospy.loginfo('Sending night tasks')
             self.send_night_tasks()
-         
+
     def send_night_tasks(self):
         instantiated_night_tasks = []
 
         now = rospy.get_rostime()
-    
+
         for task in self.night_tasks:
             night_task = deepcopy(task)
             night_task.start_after = now
@@ -225,7 +225,7 @@ class RobotRoutine(object):
         rospy.loginfo("Waiting for task_executor service...")
         rospy.wait_for_service(add_tasks_srv_name)
         rospy.wait_for_service(set_exe_stat_srv_name)
-        rospy.loginfo("Done")        
+        rospy.loginfo("Done")
         self.add_tasks = rospy.ServiceProxy(add_tasks_srv_name, AddTasks)
         self.set_execution_status = rospy.ServiceProxy(set_exe_stat_srv_name, SetExecutionStatus)
         self.demand_task = rospy.ServiceProxy(demand_task_srv_name, DemandTask)
@@ -245,7 +245,7 @@ class RobotRoutine(object):
         charging_point = 'ChargingPoint'
         charge_task = Task(action='wait_action', start_node_id=charging_point, end_node_id=charging_point, max_duration=charge_duration)
         task_utils.add_time_argument(charge_task, rospy.Time())
-        task_utils.add_duration_argument(charge_task, charge_duration)       
+        task_utils.add_duration_argument(charge_task, charge_duration)
         self.demand_task(charge_task)
 
     def clear_then_charge(self, charge_duration):
@@ -260,12 +260,12 @@ class RobotRoutine(object):
 
     def on_day_end(self):
         # end of day, charge for 10 mins; will charge all night as no moves allowed.
-        self.clear_then_charge( rospy.Duration(10 * 60.0) ) 
+        self.clear_then_charge( rospy.Duration(10 * 60.0) )
 
         rospy.loginfo('ok, I\'m calling it a day until %s' % datetime.fromtimestamp((rospy.get_rostime() + self.night_duration).to_sec()))
 
-       
-    def on_day_start(self):        
+
+    def on_day_start(self):
         rospy.loginfo('Good morning')
         self.sent_night_tasks = False
 
@@ -281,7 +281,7 @@ class RobotRoutine(object):
         self.demand_charge(self.idle_charge_duration)
 
     def create_task_routine(self, tasks, daily_start=None, daily_end=None, repeat_delta=None):
-        """ 
+        """
             If daily start or end not supplied use routine start or end
             If delta not supplied, just do once during the start to end window
         """

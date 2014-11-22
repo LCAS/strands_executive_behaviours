@@ -44,8 +44,8 @@ def create_mongodb_store_task(to_replicate, delete_after_move=True):
     msg_store = MessageStoreProxy()
     object_id = msg_store.insert(collections)
     task_utils.add_object_id_argument(task, object_id, StringList)
-    # move stuff over 24 hours old
-    task_utils.add_duration_argument(task, rospy.Duration(60 * 60 *24))
+    # move stuff over 1 minute old
+    task_utils.add_duration_argument(task, rospy.Duration(60 * 1))
     # and delete afterwards
     task_utils.add_bool_argument(task, delete_after_move)
     return task
@@ -54,7 +54,7 @@ class MarathonRoutine(PatrolRoutine):
     """ Creates a routine that mixes specific tasks with patrolling nodes."""
 
     def __init__(self, daily_start, daily_end, tour_duration_estimate=None, idle_duration=rospy.Duration(5)):
-        super(MarathonRoutine, self).__init__(daily_start=daily_start, daily_end=daily_end, tour_duration_estimate=tour_duration_estimate, idle_duration=idle_duration)        
+        super(MarathonRoutine, self).__init__(daily_start=daily_start, daily_end=daily_end, tour_duration_estimate=tour_duration_estimate, idle_duration=idle_duration)
 
 
 
@@ -63,7 +63,7 @@ class MarathonRoutine(PatrolRoutine):
                     If waypoints now supplied, use all waypoints.
 
         """
-        if not waypoints: 
+        if not waypoints:
             waypoints = self.get_nodes()
         tasks = [ create_3d_scan_task(n) for n in waypoints ]
         self.create_task_routine(tasks=tasks, daily_start=daily_start, daily_end=daily_end, repeat_delta=repeat_delta)
@@ -84,5 +84,5 @@ class MarathonRoutine(PatrolRoutine):
 
     def on_idle(self):
         # generate a random waypoint visit on idle
-        PatrolRoutine.on_idle(self)    
+        PatrolRoutine.on_idle(self)
         # pass
