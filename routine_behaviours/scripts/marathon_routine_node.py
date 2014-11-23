@@ -119,8 +119,8 @@ if __name__ == '__main__':
     routine.create_3d_scan_routine(waypoints=scan_waypoints, repeat_delta=timedelta(hours=4), daily_start=night_start, daily_end=end)
 
     # where to stop and what to tweet with the image  TODO: Find waypoints
-    twitter_waypoints = [['PlayArea', 'I hope everyone is working hard today #ERW14 #RobotMarathon'],
-                         ['Centre', 'Knowledge is power for @UoBLibServices #ERW14 #RobotMarathon']]
+    twitter_waypoints = [['PlayArea', 'I hope everyone is having fun @collectionlinc #ERW14 #RobotMarathon'],
+                         ['Centre', 'Exciting exhibitions @collectionlinc #ERW14 #RobotMarathon']]
     routine.create_tweet_routine(twitter_waypoints, daily_start=start, daily_end=lock_in, repeat_delta=timedelta(hours=1))
 
     # the list of collections from the message_store db to be replicated
