@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     # how long do you want it to take to do a tour. this must be greater than the time you think it will take!
     # the number argument is in seconds
-    tour_duration_estimate = rospy.Duration(60 * 60)
+    tour_duration_estimate = rospy.Duration(60 * 50)
 
     routine = MarathonRoutine(daily_start=start, daily_end=end,
         idle_duration=idle_duration, tour_duration_estimate=tour_duration_estimate)
@@ -107,20 +107,20 @@ if __name__ == '__main__':
 
 
     # patrol just these selected waypoints every 30 minutes in the first part of the day
-    routine.create_patrol_routine(waypoints=day_points, daily_start=start, daily_end=lock_in, repeat_delta=thirty_mins)
+    routine.create_patrol_routine(waypoints=day_points, daily_start=start, daily_end=lock_in, repeat_delta=timedelta(hours=6))
 
     # then all but these every 30 minutes in the second part part of the day
     routine.create_patrol_routine(waypoints=night_points, daily_start=night_start, daily_end=end, repeat_delta=thirty_mins)
 
     # do 3d scans
-    scan_waypoints = day_points
+    scan_waypoints = ['Boat', 'WayPoint33', 'WayPoint74']
     routine.create_3d_scan_routine(waypoints=scan_waypoints, repeat_delta=timedelta(hours=3), daily_start=start, daily_end=lock_in)
     scan_waypoints = night_points
-    routine.create_3d_scan_routine(waypoints=scan_waypoints, repeat_delta=timedelta(hours=3), daily_start=night_start, daily_end=end)
+    routine.create_3d_scan_routine(waypoints=scan_waypoints, repeat_delta=timedelta(hours=4), daily_start=night_start, daily_end=end)
 
     # where to stop and what to tweet with the image  TODO: Find waypoints
-    twitter_waypoints = [['WayPoint6', 'I hope everyone is working hard today #ERW14 #RobotMarathon'],
-                         ['WayPoint2', 'Knowledge is power for @UoBLibServices #ERW14 #RobotMarathon']]
+    twitter_waypoints = [['PlayArea', 'I hope everyone is working hard today #ERW14 #RobotMarathon'],
+                         ['Centre', 'Knowledge is power for @UoBLibServices #ERW14 #RobotMarathon']]
     routine.create_tweet_routine(twitter_waypoints, daily_start=start, daily_end=lock_in, repeat_delta=timedelta(hours=1))
 
     # the list of collections from the message_store db to be replicated
