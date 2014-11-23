@@ -107,10 +107,10 @@ if __name__ == '__main__':
 
 
     # patrol just these selected waypoints every 30 minutes in the first part of the day
-    routine.create_patrol_routine(waypoints=day_points, daily_start=start, daily_end=lock_in, repeat_delta=timedelta(hours=6))
+    #routine.create_patrol_routine(waypoints=day_points, daily_start=start, daily_end=lock_in, repeat_delta=timedelta(hours=6))
 
     # then all but these every 30 minutes in the second part part of the day
-    routine.create_patrol_routine(waypoints=night_points, daily_start=night_start, daily_end=end, repeat_delta=thirty_mins)
+    #routine.create_patrol_routine(waypoints=night_points, daily_start=night_start, daily_end=end, repeat_delta=thirty_mins)
 
     # do 3d scans
     scan_waypoints = ['Boat', 'WayPoint33', 'WayPoint74']
