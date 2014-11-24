@@ -25,19 +25,25 @@ def clear_schedule_monitor(start_time, end_time):
             rospy.loginfo('Empty service complaint occurs here. Should be safe: %s'% e)
     rospy.sleep(60)
 
-def create_mongodb_store_task(to_replicate, delete_after_move=True):
+def create_mongodb_store_task2(db, to_replicate, delete_after_move=True):
     task = Task()
     # no idea, let's say 2 hours for now -- this action server can't be preempted though, so this is cheating
-    task.max_duration = rospy.Duration(60 * 60 * 1)
+    task.max_duration = rospy.Duration(60 * 30)
     task.action = 'move_mongodb_entries'
     task.start_node_id == 'ChargingPoint'
+
+    # replicate from this db
+    task_utils.add_string_argument(task, db)
+
     # add arg for collectionst o replication
     collections = StringList(to_replicate)
     msg_store = MessageStoreProxy()
     object_id = msg_store.insert(collections)
     task_utils.add_object_id_argument(task, object_id, StringList)
-    # move stuff over 1 minute old
-    task_utils.add_duration_argument(task, rospy.Duration(60 * 1))
+
+    # move stuff over 24 hours old
+    task_utils.add_duration_argument(task, rospy.Duration(60 * 60 *24))
+    
     # and delete afterwards
     task_utils.add_bool_argument(task, delete_after_move)
     return task
@@ -123,11 +129,23 @@ if __name__ == '__main__':
                          ['Centre', 'Exciting exhibitions @collectionlinc #ERW14 #RobotMarathon']]
     routine.create_tweet_routine(twitter_waypoints, daily_start=start, daily_end=lock_in, repeat_delta=timedelta(hours=1))
 
-    # the list of collections from the message_store db to be replicated
-    message_store_collections = ['heads','metric_map_data','rosout_agg','robot_pose','task_events','scheduling_problems','ws_observations','monitored_nav_events','people_perception']
-    routine.message_store_entries_to_replicate(message_store_collections)
     # Creat lock in upload before starting night patrols
-    mongodb_task = create_mongodb_store_task(message_store_collections, True)
+    db = 'message_store'
+    collections = ['heads','metric_map_data','rosout_agg','robot_pose','task_events','scheduling_problems','ws_observations','monitored_nav_events', 'people_perception']
+    routine.message_store_entries_to_replicate(collections, db=db)
+    mongodb_task = create_mongodb_store_task2(db, collections, True)
+    routine.create_task_routine(tasks=mongodb_task, daily_start=start_midday_upload, daily_end=night_start, repeat_delta=timedelta(hours=2))
+
+    db = 'roslog'
+    collections = ['head_xtion_compressed_depth_libav', 'head_xtion_compressed_rgb_theora', 'head_xtion_compressed_rgb_compressed']
+    routine.message_store_entries_to_replicate(collections, db=db)
+    mongodb_task = create_mongodb_store_task2(db, collections, True)
+    routine.create_task_routine(tasks=mongodb_task, daily_start=start_midday_upload, daily_end=night_start, repeat_delta=timedelta(hours=2))
+
+    db = 'metric_maps'
+    collections = ['data', 'summary']
+    routine.message_store_entries_to_replicate(collections, db=db)
+    mongodb_task = create_mongodb_store_task2(db, collections, True)
     routine.create_task_routine(tasks=mongodb_task, daily_start=start_midday_upload, daily_end=night_start, repeat_delta=timedelta(hours=2))
 
     thread.start_new_thread(clear_schedule_monitor, (lock_in, start_midday_upload, ))
