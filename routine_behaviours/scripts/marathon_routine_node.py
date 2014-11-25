@@ -45,7 +45,7 @@ def create_mongodb_store_task2(db, to_replicate, delete_after_move=True):
 
     # move stuff over 24 hours old
     task_utils.add_duration_argument(task, rospy.Duration(60 * 1))
-    
+
     # and delete afterwards
     task_utils.add_bool_argument(task, delete_after_move)
     return task
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     # start = now
 
     start = time(10,00, tzinfo=localtz)
-    end = time(3,00, tzinfo=localtz)
+    end = time(23,59, tzinfo=localtz)
 
     day_points = [
         'Axes',
