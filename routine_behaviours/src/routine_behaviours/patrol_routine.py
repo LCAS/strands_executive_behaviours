@@ -88,6 +88,7 @@ class PatrolRoutine(RobotRoutine):
         """
             Called when the routine is idle. Default is to trigger travel to the charging. As idleness is determined by the current schedule, if this call doesn't utlimately cause a task schedule to be generated this will be called repeatedly.
         """
+        random_nodes=[]
         rostime_now = rospy.get_rostime()
         now = datetime.fromtimestamp(rostime_now.to_sec(), tzlocal()).time()
         if self.is_day_shift(now):

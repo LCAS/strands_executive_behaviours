@@ -11,10 +11,12 @@ from strands_executive_msgs.msg import Task
 from strands_executive_msgs import task_utils
 from mongodb_store_msgs.msg import StringList
 from mongodb_store.message_store import MessageStoreProxy
+from std_srvs.srv import Empty
 
 def clear_schedule_monitor(start_time, end_time):
     rostime_now = rospy.get_rostime()
     now = datetime.fromtimestamp(rostime_now.to_sec(), tzlocal()).time()
+    print now, start_time
     if task_routine.time_less_than(start_time, now)\
             and task_routine.time_less_than(now, end_time):
         clear_schedule_srv_name = '/task_executor/clear_schedule'
@@ -42,7 +44,7 @@ def create_mongodb_store_task2(db, to_replicate, delete_after_move=True):
     task_utils.add_object_id_argument(task, object_id, StringList)
 
     # move stuff over 24 hours old
-    task_utils.add_duration_argument(task, rospy.Duration(60 * 60 *24))
+    task_utils.add_duration_argument(task, rospy.Duration(60 * 1))
     
     # and delete afterwards
     task_utils.add_bool_argument(task, delete_after_move)
@@ -69,7 +71,6 @@ if __name__ == '__main__':
         'PlayArea',
         'Tank',
         'Fossil',
-        'Seal',
         'Armour',
         'Centre'
     ]
@@ -102,7 +103,7 @@ if __name__ == '__main__':
 
     lock_in = time(15,55, tzinfo=localtz)
     start_midday_upload = time(16,00, tzinfo=localtz)
-    night_start = time(18,00, tzinfo=localtz)
+    night_start = time(19,00, tzinfo=localtz)
     routine.day_shift_end = lock_in
     routine.night_shift_start = night_start
 
@@ -127,7 +128,7 @@ if __name__ == '__main__':
     # where to stop and what to tweet with the image  TODO: Find waypoints
     twitter_waypoints = [['PlayArea', 'I hope everyone is having fun @collectionlinc #ERW14 #RobotMarathon'],
                          ['Centre', 'Exciting exhibitions @collectionlinc #ERW14 #RobotMarathon']]
-    routine.create_tweet_routine(twitter_waypoints, daily_start=start, daily_end=lock_in, repeat_delta=timedelta(hours=1))
+    #routine.create_tweet_routine(twitter_waypoints, daily_start=start, daily_end=lock_in, repeat_delta=timedelta(hours=1))
 
     # Creat lock in upload before starting night patrols
     db = 'message_store'
