@@ -24,9 +24,9 @@ def create_patrol_task(waypoint_name):
 class PatrolRoutine(RobotRoutine):
     """ Creates a routine which simply visits nodes. """
 
-    def __init__(self, daily_start, daily_end, tour_duration_estimate=None, idle_duration=rospy.Duration(5)):
-        # super(PatrolRoutine, self).__init__(daily_start, daily_end)
-        RobotRoutine.__init__(self, daily_start, daily_end, idle_duration=idle_duration)
+    def __init__(self, daily_start, daily_end, tour_duration_estimate=None, idle_duration=rospy.Duration(5), charging_point = 'ChargingPoint'):
+        # super(PatrolRoutine, self).__init__(daily_start, daily_end)        
+        RobotRoutine.__init__(self, daily_start, daily_end, idle_duration=idle_duration, charging_point=charging_point)
         localtz = tzutc()
         self.node_names = set()
         self.tour_duration_estimate = tour_duration_estimate
@@ -56,8 +56,8 @@ class PatrolRoutine(RobotRoutine):
         return self.all_waypoints() - set(exceptions)
 
 
-    def create_patrol_routine(self, waypoints, daily_start=None, daily_end=None, repeat_delta=None):
-        #if not waypoints:
+    def create_patrol_routine(self, waypoints=None, daily_start=None, daily_end=None, repeat_delta=None):
+        #if not waypoints: 
             #waypoints = self.get_nodes()
 
         if not repeat_delta:
@@ -74,7 +74,7 @@ class PatrolRoutine(RobotRoutine):
 
 
     def create_routine(self):
-
+        
         self.create_patrol_routine()
 
 
@@ -101,6 +101,6 @@ class PatrolRoutine(RobotRoutine):
             random_nodes = list(random_nodes)
 
         rospy.loginfo('Idle for too long, generating a random waypoint task')
-        self.add_tasks([create_patrol_task(random.choice(random_nodes))])
-
+        self.add_tasks([create_patrol_task(random.choice(self.random_nodes))])
+    
 
