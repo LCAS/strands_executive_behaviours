@@ -32,7 +32,7 @@ def create_mongodb_store_task2(db, to_replicate, delete_after_move=True):
     # no idea, let's say 2 hours for now -- this action server can't be preempted though, so this is cheating
     task.max_duration = rospy.Duration(60 * 30)
     task.action = 'move_mongodb_entries'
-    task.start_node_id == 'ChargingPoint'
+    task.start_node_id = 'ChargingPoint'
 
     # replicate from this db
     task_utils.add_string_argument(task, db)
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # useful for testing
     # start = now
 
-    start = time(10,00, tzinfo=localtz)
+    start = time(9,30, tzinfo=localtz)
     end = time(23,59, tzinfo=localtz)
 
     day_points = [

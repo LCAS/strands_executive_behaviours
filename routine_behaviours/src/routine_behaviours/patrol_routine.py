@@ -101,6 +101,6 @@ class PatrolRoutine(RobotRoutine):
             random_nodes = list(random_nodes)
 
         rospy.loginfo('Idle for too long, generating a random waypoint task')
-        self.add_tasks([create_patrol_task(random.choice(self.random_nodes))])
+        self.add_tasks([create_patrol_task(random.choice(random_nodes))])
     
 
